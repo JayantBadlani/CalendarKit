@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1520"
-   version = "1.3">
+   version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7924833F23CB7B57003E3D27"
-               BuildableName = "CalendarApp.app"
-               BlueprintName = "CalendarApp"
+               BlueprintIdentifier = "A2E372472B7E8030003E6CD5"
+               BuildableName = "CalendarApp_SwiftUI.app"
+               BlueprintName = "CalendarApp_SwiftUI"
                ReferencedContainer = "container:CalendarApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,30 +26,26 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-      </Testables>
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldAutocreateTestPlan = "YES">
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      language = "en"
-      region = "US"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "YES"
-      showNonLocalizedStrings = "YES">
+      allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7924833F23CB7B57003E3D27"
-            BuildableName = "CalendarApp.app"
-            BlueprintName = "CalendarApp"
+            BlueprintIdentifier = "A2E372472B7E8030003E6CD5"
+            BuildableName = "CalendarApp_SwiftUI.app"
+            BlueprintName = "CalendarApp_SwiftUI"
             ReferencedContainer = "container:CalendarApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,9 +60,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7924833F23CB7B57003E3D27"
-            BuildableName = "CalendarApp.app"
-            BlueprintName = "CalendarApp"
+            BlueprintIdentifier = "A2E372472B7E8030003E6CD5"
+            BuildableName = "CalendarApp_SwiftUI.app"
+            BlueprintName = "CalendarApp_SwiftUI"
             ReferencedContainer = "container:CalendarApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

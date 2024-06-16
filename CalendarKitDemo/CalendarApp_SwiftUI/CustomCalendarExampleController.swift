@@ -3,15 +3,26 @@ import CalendarKit
 import SwiftUI
 
 
-protocol CalenderKitDelegate: DayViewDelegate {
-    func loadView()
+protocol CalenderKitDelegate: AnyObject {
+    func dayViewDidSelectEventView(_ eventView: EventView, controller: CustomCalendarExampleController2)
+    func dayViewDidLongPressEventView(_ eventView: EventView, controller: CustomCalendarExampleController2)
+    func dayView(dayView: DayView, didTapTimelineAt date: Date, controller: CustomCalendarExampleController2)
+    func dayView(dayView: DayView, didLongPressTimelineAt date: Date, controller: CustomCalendarExampleController2)
+    func dayViewDidBeginDragging(dayView: DayView, controller: CustomCalendarExampleController2)
+    func dayViewDidTransitionCancel(dayView: DayView, controller: CustomCalendarExampleController2)
+    func dayView(dayView: DayView, willMoveTo date: Date, controller: CustomCalendarExampleController2)
+    func dayView(dayView: DayView, didMoveTo  date: Date, controller: CustomCalendarExampleController2)
+    func dayView(dayView: DayView, didUpdate event: EventDescriptor, controller: CustomCalendarExampleController2)
+    func loadView(controller: CustomCalendarExampleController2)
 }
 protocol CalenderKitDataSource: EventDataSource {}
 
-final class CustomCalendarExampleController2: DayViewController, CalenderKitDelegate, CalenderKitDataSource {
+
+final class CustomCalendarExampleController2: DayViewController {
     
     var events: [EventDescriptor]
     weak var delegates: CalenderKitDelegate?
+    //var dataSource: CalenderKitDataSource?
     
     init(events: [EventDescriptor]) {
         self.events = events
@@ -27,43 +38,43 @@ final class CustomCalendarExampleController2: DayViewController, CalenderKitDele
     }
     
     override func loadView() {
-        delegates?.loadView()
+        delegates?.loadView(controller: self)
     }
     
     override func dayViewDidSelectEventView(_ eventView: CalendarKit.EventView) {
-        delegates?.dayViewDidSelectEventView(eventView)
+        delegates?.dayViewDidSelectEventView(eventView, controller: self)
     }
     
     override func dayViewDidLongPressEventView(_ eventView: CalendarKit.EventView) {
-        delegates?.dayViewDidLongPressEventView(eventView)
+        delegates?.dayViewDidLongPressEventView(eventView, controller: self)
     }
     
     override func dayView(dayView: CalendarKit.DayView, didTapTimelineAt date: Date) {
-        delegates?.dayView(dayView: dayView, didTapTimelineAt: date)
+        delegates?.dayView(dayView: dayView, didTapTimelineAt: date, controller: self)
     }
     
     override func dayView(dayView: CalendarKit.DayView, didLongPressTimelineAt date: Date) {
-        delegates?.dayView(dayView: dayView, didLongPressTimelineAt: date)
+        delegates?.dayView(dayView: dayView, didLongPressTimelineAt: date, controller: self)
     }
     
     override func dayViewDidBeginDragging(dayView: CalendarKit.DayView) {
-        delegates?.dayViewDidBeginDragging(dayView: dayView)
+        delegates?.dayViewDidBeginDragging(dayView: dayView, controller: self)
     }
     
     override func dayViewDidTransitionCancel(dayView: CalendarKit.DayView) {
-        delegates?.dayViewDidTransitionCancel(dayView: dayView)
+        delegates?.dayViewDidTransitionCancel(dayView: dayView, controller: self)
     }
     
     override func dayView(dayView: CalendarKit.DayView, willMoveTo date: Date) {
-        delegates?.dayView(dayView: dayView, willMoveTo: date)
+        delegates?.dayView(dayView: dayView, willMoveTo: date, controller: self)
     }
     
     override func dayView(dayView: CalendarKit.DayView, didMoveTo date: Date) {
-        delegates?.dayView(dayView: dayView, didMoveTo: date)
+        delegates?.dayView(dayView: dayView, didMoveTo: date, controller: self)
     }
     
     override func dayView(dayView: CalendarKit.DayView, didUpdate event: CalendarKit.EventDescriptor) {
-        delegates?.dayView(dayView: dayView, didUpdate: event)
+        delegates?.dayView(dayView: dayView, didUpdate: event, controller: self)
     }
 }
 
@@ -72,11 +83,12 @@ final class CustomCalendarExampleController2: DayViewController, CalenderKitDele
 struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentable {
     
     @Binding var events: [EventDescriptor]
-    var viewController: CustomCalendarExampleController2 = CustomCalendarExampleController2(events: [])
     
     func makeUIViewController(context: Context) -> CustomCalendarExampleController2 {
-        //self.viewController = CustomCalendarExampleController2(events: events)
-        self.viewController.delegates = context.coordinator
+        let viewController = CustomCalendarExampleController2(events: events)
+        viewController.delegates = context.coordinator
+        viewController.dataSource = context.coordinator
+        viewController.reloadData()
         return viewController
     }
     
@@ -86,21 +98,17 @@ struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentab
     }
     
     func makeCoordinator() -> Coordinator {
-        return Coordinator(parent: self, viewController: self.viewController, events: $events)
+        return Coordinator(parent: self)
     }
     
     class Coordinator: NSObject, CalenderKitDelegate, CalenderKitDataSource {
         
         var parent: CustomCalendarExampleControllerRepresentable
-        var viewController: CustomCalendarExampleController2
         var alreadyGeneratedSet = Set<Date>()
-        // @Binding var generatedEvents: [Event]
-        @Binding var generatedEvents: [EventDescriptor]
+        var createdEvent: EventDescriptor?
         
-        init(parent: CustomCalendarExampleControllerRepresentable, viewController: CustomCalendarExampleController2, events: Binding<[EventDescriptor]>) {
+        init(parent: CustomCalendarExampleControllerRepresentable) {
             self.parent = parent
-            self.viewController = viewController
-            self._generatedEvents = events
         }
         
         var data = [["Breakfast at Tiffany's",
@@ -149,22 +157,24 @@ struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentab
             return dateIntervalFormatter
         }()
         
-        func loadView() {
-            viewController.dayView = DayView(calendar: viewController.calendar)
-            viewController.view = viewController.dayView
-            viewController.dayView.autoScrollToFirstEvent = true
-            viewController.navigationController?.navigationBar.isHidden = true
-            viewController.reloadData()
+        func loadView(controller: CustomCalendarExampleController2) {
+            controller.dayView = DayView(calendar: controller.calendar)
+            controller.view = controller.dayView
+            controller.dayView.autoScrollToFirstEvent = true
+            controller.navigationController?.navigationBar.isHidden = true
+            controller.reloadData()
         }
+        
         
         // MARK: EventDataSource
         func eventsForDate(_ date: Date) -> [EventDescriptor] {
             if !alreadyGeneratedSet.contains(date) {
                 alreadyGeneratedSet.insert(date)
-                generatedEvents.append(contentsOf: generateEventsForDate(date))
+                parent.events.append(contentsOf: generateEventsForDate(date))
             }
-            return generatedEvents
+            return parent.events
         }
+        
         
         private func generateEventsForDate(_ date: Date) -> [EventDescriptor] {
             var workingDate = Calendar.current.date(byAdding: .hour, value: Int.random(in: 1...15), to: date)!
@@ -178,13 +188,10 @@ struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentab
                 
                 var info = data.randomElement() ?? []
                 
-                let timezone = viewController.dayView.calendar.timeZone
-                print(timezone)
-                
                 info.append(dateIntervalFormatter.string(from: event.dateInterval.start, to: event.dateInterval.end))
                 event.text = info.reduce("", {$0 + $1 + "\n"})
                 event.color = colors.randomElement() ?? .red
-                event.isAllDay = Bool.random()
+                event.isAllDay = true
                 event.lineBreakMode = .byTruncatingTail
                 
                 events.append(event)
@@ -199,53 +206,51 @@ struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentab
         }
         
         // MARK: DayViewDelegate
-        private var createdEvent: EventDescriptor?
-        
-        func dayViewDidSelectEventView(_ eventView: EventView) {
+        func dayViewDidSelectEventView(_ eventView: EventView,controller: CustomCalendarExampleController2) {
             guard let descriptor = eventView.descriptor as? Event else {
                 return
             }
             print("Event has been selected: \(descriptor) \(String(describing: descriptor.userInfo))")
         }
         
-        func dayViewDidLongPressEventView(_ eventView: EventView) {
+        func dayViewDidLongPressEventView(_ eventView: CalendarKit.EventView, controller: CustomCalendarExampleController2) {
             guard let descriptor = eventView.descriptor as? Event else {
                 return
             }
-            viewController.endEventEditing()
+            controller.endEventEditing()
             print("Event has been longPressed: \(descriptor) \(String(describing: descriptor.userInfo))")
-            viewController.beginEditing(event: descriptor, animated: true)
+            controller.beginEditing(event: descriptor, animated: true)
             print(Date())
         }
         
-        func dayView(dayView: DayView, didTapTimelineAt date: Date) {
-            viewController.endEventEditing()
+        func dayView(dayView: CalendarKit.DayView, didTapTimelineAt date: Date, controller: CustomCalendarExampleController2) {
+            controller.endEventEditing()
             print("Did Tap at date: \(date)")
         }
         
-        func dayViewDidBeginDragging(dayView: DayView) {
-            viewController.endEventEditing()
+        func dayViewDidBeginDragging(dayView: CalendarKit.DayView, controller: CustomCalendarExampleController2) {
+            controller.endEventEditing()
             print("DayView did begin dragging")
         }
         
-        func dayView(dayView: DayView, willMoveTo date: Date) {
+        func dayView(dayView: CalendarKit.DayView, willMoveTo date: Date, controller: CustomCalendarExampleController2) {
             print("DayView = \(dayView) will move to: \(date)")
         }
         
-        func dayView(dayView: DayView, didMoveTo date: Date) {
+        func dayView(dayView: CalendarKit.DayView, didMoveTo date: Date, controller: CustomCalendarExampleController2) {
             print("DayView = \(dayView) did move to: \(date)")
         }
         
-        func dayViewDidTransitionCancel(dayView: CalendarKit.DayView) {
+        func dayViewDidTransitionCancel(dayView: CalendarKit.DayView, controller: CustomCalendarExampleController2) {
         }
         
-        func dayView(dayView: DayView, didLongPressTimelineAt date: Date) {
+        func dayView(dayView: CalendarKit.DayView, didLongPressTimelineAt date: Date, controller: CustomCalendarExampleController2) {
             print("Did long press timeline at date \(date)")
             // Cancel editing current event and start creating a new one
-            viewController.endEventEditing()
+            controller.endEventEditing()
             let event = generateEventNearDate(date)
             print("Creating a new event")
-            viewController.create(event: event, animated: true)
+            controller.create(event: event, animated: true)
             createdEvent = event
         }
         
@@ -266,7 +271,7 @@ struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentab
             return event
         }
         
-        func dayView(dayView: DayView, didUpdate event: EventDescriptor) {
+        func dayView(dayView: CalendarKit.DayView, didUpdate event: CalendarKit.EventDescriptor, controller: CustomCalendarExampleController2) {
             print("did finish editing \(event)")
             print("new startDate: \(event.dateInterval.start) new endDate: \(event.dateInterval.end)")
             
@@ -276,12 +281,11 @@ struct CustomCalendarExampleControllerRepresentable: UIViewControllerRepresentab
             
             if let createdEvent = createdEvent {
                 createdEvent.editedEvent = nil
-                generatedEvents.append(createdEvent)
+                parent.events.append(createdEvent)
                 self.createdEvent = nil
-                viewController.endEventEditing()
+                controller.endEventEditing()
             }
-            
-            viewController.reloadData()
+            controller.reloadData()
         }
     }
 }
